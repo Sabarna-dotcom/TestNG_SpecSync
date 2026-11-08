@@ -1,0 +1,17 @@
+{
+  "$schema": "https://schemas.specsolutions.eu/specsync4azuredevops-config-v5-latest.json",
+  "remote": {
+    "projectUrl": "https://dev.azure.com/YOUR_ORG/YOUR_PROJECT",
+    "testSuite": {
+      "name": "TestNG Automation"
+    }
+  },
+  "toolSettings": {
+    "plugins": [
+      {
+        "packageId": "SpecSync.Plugin.TestNGTestSource",
+        "packageVersion": "VERIFY_COMPATIBLE_VERSION"
+      }
+    ]
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "$schema": "https://schemas.specsolutions.eu/specsync4azuredevops-config-v5-latest.json",
+  "remote": {
+    "projectUrl": "https://dev.azure.com/YOUR_ORG/YOUR_PROJECT",
+    "testSuite": {
+      "name": "SpecFlow Automation"
+    }
+  }
+}

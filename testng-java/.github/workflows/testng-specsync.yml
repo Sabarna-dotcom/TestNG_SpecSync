@@ -1,0 +1,51 @@
+name: TestNG + SpecSync + Azure DevOps
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore SpecSync CLI
+        run: dotnet tool restore
+
+      - name: Synchronize TestNG tests to ADO
+        env:
+          SPECSYNC_PAT: ${{ secrets.ADO_SPECSYNC_PAT }}
+        run: dotnet specsync push
+
+      - name: Run TestNG
+        id: tests
+        continue-on-error: true
+        run: mvn test
+
+      - name: Publish results to ADO
+        if: always() && steps.tests.outcome != 'skipped'
+        env:
+          SPECSYNC_PAT: ${{ secrets.ADO_SPECSYNC_PAT }}
+        run: |
+          dotnet specsync publish-test-results \
+            --testResult "target/surefire-reports" \
+            --testResultFormat SurefireXml
+
+      - name: Mark workflow failed when tests fail
+        if: always() && steps.tests.outcome == 'failure'
+        run: exit 1

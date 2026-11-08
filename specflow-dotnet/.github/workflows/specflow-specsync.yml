@@ -1,0 +1,44 @@
+name: SpecFlow + SpecSync + Azure DevOps
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore SpecSync CLI
+        run: dotnet tool restore
+
+      - name: Synchronize SpecFlow scenarios to ADO
+        env:
+          SPECSYNC_PAT: ${{ secrets.ADO_SPECSYNC_PAT }}
+        run: dotnet specsync push
+
+      - name: Run SpecFlow tests and create TRX
+        id: tests
+        continue-on-error: true
+        run: dotnet test --logger "trx;LogFileName=specflow-results.trx"
+
+      - name: Publish TRX results to ADO
+        if: always() && steps.tests.outcome != 'skipped'
+        env:
+          SPECSYNC_PAT: ${{ secrets.ADO_SPECSYNC_PAT }}
+        run: |
+          dotnet specsync publish-test-results \
+            --testResult "**/TestResults/specflow-results.trx"
+
+      - name: Mark workflow failed when tests fail
+        if: always() && steps.tests.outcome == 'failure'
+        run: exit 1
